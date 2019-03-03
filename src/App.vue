@@ -10,7 +10,7 @@
             <input
               type="text"
               class="form-control"
-              v-model="name"
+              v-model="positionInfo.name"
               id="positionInfoName"
               placeholder
             >
@@ -24,7 +24,7 @@
             <input
               type="text"
               class="form-control"
-              v-model="address"
+              v-model="positionInfo.address"
               id="positionInfoAddress"
               placeholder
             >
@@ -38,7 +38,7 @@
             <input
               type="number"
               class="form-control"
-              v-model="book_value"
+              v-model="positionInfo.book_value"
               id="positionInfoAccountValue"
               placeholder="금액 입력"
             >
@@ -52,20 +52,20 @@
             <button
               type="button"
               class="btn btn-light"
-              v-bind:class="{ 'active': position_type=='owner_occupied'}"
-              @click="position_type = 'owner_occupied'"
+              v-bind:class="{ 'active': positionInfo.position_type=='owner_occupied'}"
+              @click="positionInfo.position_type = 'owner_occupied'"
             >자가</button>
             <button
               type="button"
               class="btn btn-light"
-              v-bind:class="{ 'active': position_type=='reserve_only_rented'}"
-              @click="position_type = 'reserve_only_rented'"
+              v-bind:class="{ 'active': positionInfo.position_type=='reserve_only_rented'}"
+              @click="positionInfo.position_type = 'reserve_only_rented'"
             >전세</button>
             <button
               type="button"
               class="btn btn-light"
-              v-bind:class="{ 'active': position_type=='monthly_payment_rented'}"
-              @click="position_type = 'monthly_payment_rented'"
+              v-bind:class="{ 'active': positionInfo.position_type=='monthly_payment_rented'}"
+              @click="positionInfo.position_type = 'monthly_payment_rented'"
             >월세</button>
           </div>
         </div>
@@ -464,7 +464,8 @@
                 <h6 class="m-0 font-weight-bold text-primary">Projects</h6>
               </div>
               <div class="card-body">
-                <h4 class="small font-weight-bold">Server Migration
+                <h4 class="small font-weight-bold">
+                  Server Migration
                   <span class="float-right">20%</span>
                 </h4>
                 <div class="progress mb-4">
@@ -477,7 +478,8 @@
                     aria-valuemax="100"
                   ></div>
                 </div>
-                <h4 class="small font-weight-bold">Sales Tracking
+                <h4 class="small font-weight-bold">
+                  Sales Tracking
                   <span class="float-right">40%</span>
                 </h4>
                 <div class="progress mb-4">
@@ -490,7 +492,8 @@
                     aria-valuemax="100"
                   ></div>
                 </div>
-                <h4 class="small font-weight-bold">Customer Database
+                <h4 class="small font-weight-bold">
+                  Customer Database
                   <span class="float-right">60%</span>
                 </h4>
                 <div class="progress mb-4">
@@ -503,7 +506,8 @@
                     aria-valuemax="100"
                   ></div>
                 </div>
-                <h4 class="small font-weight-bold">Payout Details
+                <h4 class="small font-weight-bold">
+                  Payout Details
                   <span class="float-right">80%</span>
                 </h4>
                 <div class="progress mb-4">
@@ -516,7 +520,8 @@
                     aria-valuemax="100"
                   ></div>
                 </div>
-                <h4 class="small font-weight-bold">Account Setup
+                <h4 class="small font-weight-bold">
+                  Account Setup
                   <span class="float-right">Complete!</span>
                 </h4>
                 <div class="progress">
@@ -550,7 +555,11 @@
                 </div>
                 <p>
                   Add some quality, svg illustrations to your project courtesy of
-                  <a target="_blank" rel="nofollow" href="https://undraw.co/">unDraw</a>,
+                  <a
+                    target="_blank"
+                    rel="nofollow"
+                    href="https://undraw.co/"
+                  >unDraw</a>,
                   a constantly updated collection of beautiful svg images that you can use completely free and
                   without attribution!
                 </p>
@@ -614,16 +623,112 @@
 </template>
 
 <script>
-
 import HelloWorld from "./components/HelloWorld.vue";
 
 export default {
   name: "app",
   components: {
     HelloWorld
-  }
-};
+  },
+  data() {
+    return {
+      positionInfo: {
+        name: undefined,
+        address: undefined,
+        position_type: "owner_occupied",
+        notional: undefined,
+        book_value: undefined,
+        effective_date: "2018-10-11",
+        isAddDisabled: false,
+        isEditDisabled: false
+      },
+      positionList: {
+        position_list: [],
+        selected: undefined,
+        isActive: false
+      },
+      analysisResult: {
+        summary: {
+          result_date: undefined,
+          book_value: undefined,
+          loan: {
+            amount: 0
+          },
+          rent: {
+            deposit: 0
+          },
+          profit_percent: 0.03,
+          profit_amount: 10000
+        }
+      },
+      storePositionInfo: {
+        email: "minikie@naver.com",
+        access_key: undefined
+      }
+    };
+  },
 
+  methods: {
+    addbtn_Click() {
+      if (positionInfo_validation()) {
+        position = {
+          name: positionInfo_app.name,
+          notional: parseFloat(positionInfo_app.notional),
+          book_value: parseFloat(positionInfo_app.notional)
+        };
+        positionList_app.position_list.push(position);
+        positionInfo_app.isAddDisabled = true;
+        console.log(positionList_app.position_list);
+      }
+      // list 에 더함
+      // get list
+    },
+
+    analysisbtn_Click() {
+      axios
+        .post("/analysis", {
+          email: storePositionInfo_app.email,
+          position_list: positionList_app.position_list
+        })
+        .then(function(response) {
+          analysisResult_app.summary = response.data;
+
+          console.log(response);
+        })
+        .catch(function(error) {
+          console.log(error);
+        });
+    },
+    storePositionbtn_Click() {
+      axios
+        .post("/storepositions", {
+          email: storePositionInfo_app.email,
+          positions: positionList_app.position_list
+        })
+        .then(function(response) {
+          storePositionInfo_app.access_key = response.data["access_key"];
+
+          console.log(response);
+        })
+        .catch(function(error) {
+          console.log(error);
+        });
+    },
+
+    nameChangeHandler: function(event) {
+      var names = positionList_app.position_list.map(function(v) {
+        return v.name;
+      });
+      if (names.indexOf(this.name) >= 0) {
+        this.isAddDisabled = true;
+        console.log("found");
+      } else {
+        this.isAddDisabled = false;
+      }
+    }
+  },
+  delimiters: ["[[", "]]"]
+};
 </script>
 
 <style>
